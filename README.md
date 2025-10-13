@@ -45,10 +45,28 @@ Want to monitor disk activity instead of network activity? Check out the sister 
 
 **Arguments:**
 
+*Basic Functions*
+
 --silent, -s	- Silences command-line output
 
 --version, -v	- Displays the current version of netcaps
 
 --help, -h		- Shows the help menu
+
+*Include Specific Interfaces*
+
+--local-included, -l	- listen on loX in addition to others
+
+--utun-included, -u		- listen on utunX in addition to others
+
+*ONLY Listen to Specific Interfaces*
+
+--local-only, -L	- only listen on loX
+
+--en-only, -E		- only listen on enX
+
+--peers-only, -P 	- only listen on awdlX and llwX
+
+--utun-only, -U		- only listen on utunX
 
 That really. Is about it. Have fun. 
