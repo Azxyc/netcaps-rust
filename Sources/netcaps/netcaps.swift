@@ -12,13 +12,18 @@ func isCapsLockOn() -> Bool {
     return CGEventSource.keyState(.combinedSessionState, key: 57)
 }
 
-@MainActor var legitInterval: TimeInterval = 0.00350
+@MainActor var legitInterval: TimeInterval = 0.00300
 @MainActor var lastCapsState: Bool = false
+@MainActor var lastCapsCheckTime: TimeInterval = 0
 @MainActor func setInterval() {
-    let currentCapsState = isCapsLockOn()
-    if currentCapsState != lastCapsState {
-        legitInterval = currentCapsState ? 0.01050 : 0.00350
-        lastCapsState = currentCapsState
+    let now = ProcessInfo.processInfo.systemUptime
+    if now - lastCapsCheckTime > 0.5 {
+        let currentCapsState = isCapsLockOn()
+        if currentCapsState != lastCapsState {
+            legitInterval = currentCapsState ? 0.01050 : 0.00300
+            lastCapsState = currentCapsState
+        }
+        lastCapsCheckTime = now
     }
 }
 
@@ -27,6 +32,7 @@ func isCapsLockOn() -> Bool {
 class CapsLockLEDManager {
     private var manager: IOHIDManager?
     private var cachedLEDElements: [(device: IOHIDDevice, element: IOHIDElement)] = []
+    private var deviceCooldowns: [IOHIDDevice: TimeInterval] = [:]
     init?() {
         guard createManager() else { return nil }
     }
@@ -68,6 +74,7 @@ class CapsLockLEDManager {
             for element in elements where IOHIDElementGetUsagePage(element) == UInt32(kHIDPage_LEDs) {
                 if IOHIDElementGetUsage(element) == UInt32(kHIDUsage_LED_CapsLock) {
                     cachedLEDElements.append((device, element))
+                    break
                 }
             }
         }
@@ -75,6 +82,7 @@ class CapsLockLEDManager {
     }
     
     func reinitialize() {
+        deviceCooldowns.removeAll()
         if let manager = manager {
             IOHIDManagerUnscheduleFromRunLoop(manager, CFRunLoopGetCurrent(), CFRunLoopMode.defaultMode.rawValue)
             IOHIDManagerClose(manager, IOOptionBits(kIOHIDOptionsTypeNone))
@@ -84,7 +92,11 @@ class CapsLockLEDManager {
     }
     
     func toggle(_ on: Bool) {
+        let now = ProcessInfo.processInfo.systemUptime
         for (device, element) in cachedLEDElements {
+            if let cooldownUntil = deviceCooldowns[device], now < cooldownUntil {
+                continue
+            }
             let value = IOHIDValueCreateWithIntegerValue(
                 kCFAllocatorDefault,
                 element,
@@ -92,6 +104,13 @@ class CapsLockLEDManager {
                 on ? 1 : 0
             )
             let result = IOHIDDeviceSetValue(device, element, value)
+            if result == -536870165 {
+                return
+            }
+            if result == -536870203 {
+                deviceCooldowns[device] = now + 1.0
+                continue
+            }
             if result == 268435459 || result == -536870195 {
                 if !silent {
                     print("Re-initializing IOHIDManager...")
@@ -221,7 +240,7 @@ struct main {
         }
 
         if args.contains("-v") || args.contains("--version") {
-            print("netcaps version 1.6.0")
+            print("netcaps version 1.6.1")
             print("    Made by Taj C (forcequit)")
             print("    Check this out on GitHub, at https://github.com/forcequitOS/netcaps")
             exit(0)
