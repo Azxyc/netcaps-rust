@@ -13,6 +13,11 @@ brew install forcequitOS/brew/netcaps
 
 It couldn't get much simpler than this. 
 
+### Build From Source
+```
+cargo build --release --locked
+```
+
 ---
 ### Run At Startup
 **Globally:**
@@ -30,7 +35,7 @@ It couldn't get much simpler than this.
 And you're off to the races!
 
 >[!NOTE]
-All functionality of your Caps Lock key is 100% preserved with netcaps. Also, netcaps is proudly written in Swift. Yay. 
+All functionality of your Caps Lock key is 100% preserved with netcaps. Also, netcaps is proudly written in Rust. Yay. 
 
 >[!WARNING]
 I don't know if this will impact your battery life or if it'll kill your Caps Lock key LED over time. Your mileage may vary. I'm not responsible if this somehow blows up your computer, but it probably shouldn't.

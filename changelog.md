@@ -1,3 +1,8 @@
+### Rust Rewrite
+
+- Replaced the SwiftPM/Xcode executable with a Cargo-based Rust implementation.
+- Kept the same Caps Lock LED, network-interface monitoring, and command-line behavior.
+
 ### Efficiency & Leniency
 
 - The default interval's been changed again to be LESS efficient, because I've done some magic tricks to decrease CPU usage further, and CPU usage was already really low. 
